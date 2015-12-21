@@ -73,7 +73,7 @@ data ExternsFixity = ExternsFixity
   -- | The operator symbol
   , efOperator :: String
   -- | The value the operator is an alias for
-  , efAlias :: Maybe Ident
+  , efAlias :: Maybe (Maybe ModuleName, Ident)
   } deriving (Show, Read)
 
 -- | A type or value declaration appearing in an externs file
@@ -153,12 +153,14 @@ moduleToExternsFile (Module _ _ mn ds (Just exps)) env = ExternsFile{..}
   efDeclarations  = concatMap toExternsDeclaration efExports
 
   fixityDecl :: Declaration -> Maybe ExternsFixity
-  fixityDecl (FixityDeclaration (Fixity assoc prec) op alias) = fmap (const (ExternsFixity assoc prec op alias)) (find exportsOp exps)
+  fixityDecl (FixityDeclaration (Fixity assoc prec) op alias) = fmap (const (ExternsFixity assoc prec op (fmap qualToTuple alias))) (find exportsOp exps)
     where
     exportsOp :: DeclarationRef -> Bool
     exportsOp (PositionedDeclarationRef _ _ r) = exportsOp r
     exportsOp (ValueRef ident') = ident' == Op op
     exportsOp _ = False
+    qualToTuple :: Qualified a -> (Maybe ModuleName, a)
+    qualToTuple (Qualified mn' a) = (mn', a)
   fixityDecl (PositionedDeclaration _ _ d) = fixityDecl d
   fixityDecl _ = Nothing
 

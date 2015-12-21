@@ -71,7 +71,7 @@ type IntermediateDeclaration
 -- with their associativity and precedence.
 data DeclarationAugment
   = AugmentChild ChildDeclaration
-  | AugmentFixity P.Fixity (Maybe P.Ident)
+  | AugmentFixity P.Fixity (Maybe (P.Qualified P.Ident))
 
 -- | Augment top-level declarations; the second pass. See the comments under
 -- the type synonym IntermediateDeclaration for more information.
@@ -90,7 +90,7 @@ augmentDeclarations (partitionEithers -> (augments, toplevels)) =
       AugmentChild child ->
         d { declChildren = declChildren d ++ [child] }
       AugmentFixity fixity alias ->
-        d { declFixity = Just (fixity, P.runIdent <$> alias) }
+        d { declFixity = Just (fixity, P.showQualified P.runIdent <$> alias) }
 
 -- | Add the default operator fixity for operators which do not have associated
 -- fixity declarations.
